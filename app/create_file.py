@@ -3,29 +3,31 @@ import os
 import datetime
 
 
-terminal = sys.argv
-d_passed = False
-f_passed = False
-f_written = False
-path = os.getcwd()
-file_name = ""
+def parse_args(args: list[str]) -> tuple[str, str]:
+    """Розбирає аргументи командного рядка та повертає параметри."""
+    path = os.getcwd()
+    file_name = ""
+    index = 1
 
-if len(sys.argv) > 2:
-    for index in range(1, len(sys.argv)):
-        if sys.argv[index - 1] == "-f":
-            file_name = sys.argv[index]
-            f_passed = True
+    while index < len(args):
+        if args[index] == "-f" and index + 1 < len(args):
+            file_name = args[index + 1]
+            index += 2
             continue
-        if sys.argv[index] == "-d":
-            d_passed = True
+        elif args[index] == "-d" and index + 1 < len(args):
+            index += 1
+            while index < len(args) and args[index] != "-f":
+                path = os.path.join(path, args[index])
+                index += 1
             continue
-        if d_passed and sys.argv[index] != "-f":
-            path = os.path.join(path, sys.argv[index])
+        index += 1
 
-if d_passed:
-    os.makedirs(path)
-if f_passed:
-    with open(os.path.join(path, file_name), "a") as file:
+    return path, file_name
+
+
+def append_interactive_content(file_path: str) -> None:
+    """Записує поточний час та введені користувачем рядки у файл."""
+    with open(file_path, "a") as file:
 
         if file.tell() != 0:
             file.write("\n")
@@ -42,3 +44,15 @@ if f_passed:
 
             file.write(f"{line_count} {line}\n")
             line_count += 1
+
+
+path, file_name = parse_args(sys.argv)
+
+# 1. Створюємо директорію, якщо не поточна
+if path != os.getcwd():
+    os.makedirs(path)
+
+# 2. Записуємо у файл якщо ім'я файлу не порожнє
+if file_name:
+    file_path = os.path.join(path, file_name)
+    append_interactive_content(file_path)
